@@ -3,8 +3,10 @@ import pygame
 from settings import Settings
 from ship import Ship
 
+
 class AlienInvasion:
     """Класс для управления ресурсами и поведением игры"""
+
     def __init__(self):
         """Инициализирует игру и создает игровые ресурсы"""
         pygame.init()
@@ -15,24 +17,49 @@ class AlienInvasion:
 
         self.ship = Ship(self)
 
-        #Задание цвета фона
-        self.bg_color = (230, 230, 230)
-    
+
+
     def run_game(self):
         """Запускает основной цикл игры"""
         while True:
-            # Отслеживание событий клавиатуры и мыши
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit()
-            #При каждом проходе цикла перерисовывается экран
-            self.screen.fill(self.settings.bg_color)
-            self.ship.blitme()
-            # Отображение последнего прорисованного экрана
-            pygame.display.flip()
+            self._check_events()
+            self.ship.update()
+            self._update_screen()
             self.clock.tick(60)
 
+    def _check_events(self):
+        """Обрабатывает нажатие клавиш и события мыши."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                self._check_keydown_events(event)
+            elif event.type == pygame.KEYUP:
+                self._check_keyup_events(event)
+
+    def _check_keydown_events(self, event):
+        """Реагирует на нажатие клавиш."""
+        if event.key == pygame.K_RIGHT:
+            self.ship.moving_right = True
+        if event.key == pygame.K_LEFT:
+            self.ship.moving_left = True
+
+    def _check_keyup_events(self, event):
+        """Реагирует на отпускание клавиш."""
+        if event.key == pygame.K_RIGHT:
+            self.ship.moving_right = False
+        if event.key == pygame.K_LEFT:
+            self.ship.moving_left = False
+
+    def _update_screen(self):
+        # При каждом проходе цикла перерисовывается экран
+        self.screen.fill(self.settings.bg_color)
+        self.ship.blitme()
+        # Отображение последнего прорисованного экрана
+        pygame.display.flip()
+
+
 if __name__ == '__main__':
-    #Создание экземпляра и запуск игры
+    # Создание экземпляра и запуск игры
     ai = AlienInvasion()
     ai.run_game()
