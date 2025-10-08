@@ -33,6 +33,7 @@ class AlienInvasion:
             self._check_events()
             self.ship.update()
             self._update_bullets()
+            self._update_aliens()
             self._update_screen()
             self.clock.tick(60)
 
@@ -87,6 +88,16 @@ class AlienInvasion:
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
 
+    def _update_aliens(self):
+        """
+        Проверяет, достиг ли флот края экрана, с последующим обновлением
+        позиций всех ппришельцев во флоте.
+        """
+        self._check_fleet_edges()
+        self.aliens.update()
+
+        # self._check_bottom_and_respawn()
+
     def _create_fleet(self):
         """Создает флот пришельцев."""
         # интервал между соседними пришельцами равен ширине пришельца
@@ -110,7 +121,56 @@ class AlienInvasion:
         new_alien.rect.y = y_position
         self.aliens.add(new_alien)
 
+    def _check_fleet_edges(self):
+        """Реагирует на достижение пришельцем края экрана."""
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                self._change_fleet_direction()
+                break
 
+    def _change_fleet_direction(self):
+        """Опускает весь флот и меняет направление."""
+
+        for alien in self.aliens.sprites():
+            alien.rect.y += self.settings.fleet_drop_speed
+        self.settings.fleet_direction *= -1
+
+    # def _check_bottom_and_respawn(self):
+    #     """Если нижний ряд дошёл до края, удалить его и создать новый сверху."""
+    #     screen_bottom = self.settings.screen_height
+    #
+    #     # Находим нижнюю координату самого нижнего пришельца
+    #     lowest_y = max(alien.rect.bottom for alien in self.aliens.sprites())
+    #
+    #     if lowest_y >= screen_bottom:
+    #         self._remove_bottom_row()
+    #         self._create_top_row()
+
+    # def _remove_bottom_row(self):
+    #     """Удаляет нижний ряд пришельцев."""
+    #     if not self.aliens:
+    #         return
+    #
+    #     # Определяем нижний ряд (у кого rect.bottom максимально)
+    #     max_bottom = max(alien.rect.bottom for alien in self.aliens.sprites())
+    #
+    #     # Удаляем всех пришельцев из нижнего ряда
+    #     for alien in list(self.aliens):
+    #         if abs(alien.rect.bottom - max_bottom) < alien.rect.height // 2:
+    #             self.aliens.remove(alien)
+    #
+    # def _create_top_row(self):
+    #     """Создаёт один новый ряд пришельцев сверху."""
+    #     alien = Alien(self)
+    #     alien_width, alien_height = alien.rect.size
+    #
+    #     # координата y для нового ряда — чуть выше экрана
+    #     y_position = alien_height
+    #
+    #     current_x = alien_width
+    #     while current_x < (self.settings.screen_width - 2 * alien_width):
+    #         self._create_alien(current_x, y_position)
+    #         current_x += 2 * alien_width
 
     def _update_screen(self):
         # При каждом проходе цикла перерисовывается экран
