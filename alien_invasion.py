@@ -5,6 +5,7 @@ import pygame
 
 from settings import Settings
 from game_stats import GameStats
+from  button import Button
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -33,7 +34,11 @@ class AlienInvasion:
         self._create_fleet()
 
         # Игра запускается в активном состоянии
-        self.game_active = True
+        self.game_active = False
+
+        #Создание кнопки "Play"
+        self.play_button = Button(self, "Play")
+
 
 
 
@@ -58,7 +63,25 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
 
+    def _check_play_button(self, mouse_pos):
+        """Запускает новую игру при нажатии кнопки Play"""
+        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
+        if button_clicked and not self.game_active:
+            # сброс игровой статистики
+            self.stats.reset_stats()
+            self.game_active = True
+            # очистка групп
+            self.bullets.empty()
+            self.aliens.empty()
+            #создание нового флота и размещение корабля в центре
+            self._create_fleet()
+            self.ship.center_ship()
+            #указатель мыши скрывается
+            pygame.mouse.set_visible(False)
 
     def _check_keydown_events(self, event):
         """Реагирует на нажатие клавиш."""
@@ -153,6 +176,7 @@ class AlienInvasion:
             sleep(1)
         else:
             self.game_active = False
+            pygame.mouse.set_visible(True)
 
 
     def _create_fleet(self):
@@ -240,6 +264,9 @@ class AlienInvasion:
             bullet.draw_bullet()
         self.ship.blitme()
         self.aliens.draw(self.screen)
+        #кнопка Play отображается в том случае, если игра не активна
+        if not self.game_active:
+            self.play_button.draw_button()
         # Отображение последнего прорисованного экрана
         pygame.display.flip()
 
