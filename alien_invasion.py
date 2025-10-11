@@ -5,6 +5,7 @@ import pygame
 
 from settings import Settings
 from game_stats import GameStats
+from scoreboard import Scoreboard
 from  button import Button
 from ship import Ship
 from bullet import Bullet
@@ -26,6 +27,7 @@ class AlienInvasion:
 
         #создание экземпляра для хранения игровой статистики
         self.stats = GameStats(self)
+        self.sb = Scoreboard(self)
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
@@ -75,6 +77,8 @@ class AlienInvasion:
             self.settings.initialize_dynamic_settings()
             # сброс игровой статистики
             self.stats.reset_stats()
+            self.sb.prep_score()
+            self.sb.prep_level()
             self.game_active = True
             # очистка групп
             self.bullets.empty()
@@ -135,11 +139,19 @@ class AlienInvasion:
     def _check_bullet_alien_collisions(self):
         # проверка попаданий в пришельцев; при обнаружении попадания удалить снаряд и пришельца
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        if collisions:
+            for aliens in collisions.values():
+                self.stats.score += self.settings.alien_point * len(aliens)
+            self.sb.prep_score()
+            self.sb.check_high_score()
         if not self.aliens:
             # уничтожение существующих снарядов и создание нового флота
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
+            #увеличение уровня
+            self.stats.level += 1
+            self.sb.prep_level()
 
 
     def _update_aliens(self):
@@ -189,7 +201,7 @@ class AlienInvasion:
         alien_width, alien_height = alien.rect.size
 
         current_x, current_y  = alien_width, alien_height
-        while current_y < (self.settings.screen_height - 7 * alien_height):
+        while current_y < (self.settings.screen_height - 9 * alien_height):
             while current_x < (self.settings.screen_width - 2 * alien_width):
                 self._create_alien(current_x, current_y)
                 current_x += 2 * alien_width
@@ -267,6 +279,7 @@ class AlienInvasion:
             bullet.draw_bullet()
         self.ship.blitme()
         self.aliens.draw(self.screen)
+        self.sb.show_score()
         #кнопка Play отображается в том случае, если игра не активна
         if not self.game_active:
             self.play_button.draw_button()
